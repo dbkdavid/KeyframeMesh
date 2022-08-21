@@ -8,6 +8,11 @@ def selectMesh( isChecked ):
 	obj = cmds.ls( selection=True, long=True )[0]
 	verts = cmds.polyListComponentConversion( obj, toVertex=True )
 	verts = cmds.ls( verts, flatten=True, long=True )
+	
+	updateTextLabel( True )
+	
+	if not cmds.attributeQuery( 'KeyframeMesh', node=obj, exists=True ):
+		cmds.addAttr( obj, ln="KeyframeMesh", at="bool", keyable=True )
 
 def initializeMesh( isChecked ):
 	
@@ -95,6 +100,15 @@ def addKeyframeFromMesh ( isChecked ):
 	else:
 		print("Error: Second mesh does not match.")
 
+def updateTextLabel( isChecked ):
+	
+	try:
+		mesh_name = cmds.ls( obj, long=False )[0]
+	except:
+		mesh_name = "Undefined"
+	
+	cmds.text( 'text_sel_mesh', label='Selected Mesh:          ' + mesh_name, edit=True )
+
 def makeUI():
 
 	# UI settings
@@ -113,8 +127,11 @@ def makeUI():
 	cmds.text( label='', height=win_padding )
 	
 	# Buttons
+	cmds.text( 'text_sel_mesh', label='Selected Mesh:          Undefined', align="left")
+	cmds.text( label='', height=win_padding )
 	cmds.button( label='Select Mesh', command=selectMesh, annotation="Defines the mesh to apply keyframes." )
-	cmds.button( label='Add Attribute', command=initializeMesh, annotation="Adds a custom KeyframeMesh attribute to the selected mesh transform." )
+	#cmds.button( label='Update Label', command=updateTextLabel, annotation="Defines the mesh to apply keyframes." )
+	#cmds.button( label='Add Attribute', command=initializeMesh, annotation="Adds a custom KeyframeMesh attribute to the selected mesh transform." )
 	cmds.button( label='Store Initial Pose', command=storeIniVertPos, annotation="Stores the initial vertex positions of the mesh. This is necessary for edits made when in sculpt mode." )
 	cmds.button( label='Add Keyframe', command=keyMesh, bgc=[0.5, 0.03, 0.03], annotation="Adds a keyframe to all vertices of the selected mesh at the current time." )
 	cmds.button( label='Add Keyframe From Second Mesh', bgc=[0.4, 0.2, 0.2], command=addKeyframeFromMesh, annotation="Adds a keyframe to all vertices of the selected mesh at the current time based on the vertex positions of a second selected mesh." )
