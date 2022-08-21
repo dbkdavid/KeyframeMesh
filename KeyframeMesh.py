@@ -60,6 +60,41 @@ def selectObjAndVerts( isChecked ):
 	
 	cmds.select( selection )
 
+def addKeyframeFromMesh ( isChecked ):
+
+	global obj
+	global verts
+	global vert_pos
+	
+	initial_vert_pos = vert_pos
+	
+	secondary_obj = cmds.ls( selection=True, long=True )[0]
+	secondary_verts = cmds.polyListComponentConversion( secondary_obj, toVertex=True )
+	secondary_verts = cmds.ls( secondary_verts, flatten=True, long=True )
+	
+	if len( secondary_verts ) == len( verts ):
+		
+		for i in range( len( secondary_verts ) ):
+			
+			new_vert_pos = cmds.xform( secondary_verts[i], query=True, translation=True, worldSpace=False )
+			
+			result_vert_pos = list()
+		
+			for j in range( len( new_vert_pos ) ):
+				result_vert_pos.append( new_vert_pos[j] - initial_vert_pos[i][j] )
+			
+			cmds.setKeyframe( verts[i], attribute="pntx", value=result_vert_pos[0] )
+			cmds.setKeyframe( verts[i], attribute="pnty", value=result_vert_pos[1] )
+			cmds.setKeyframe( verts[i], attribute="pntz", value=result_vert_pos[2] )
+		
+		cmds.setKeyframe( obj + ".KeyframeMesh", value=True )
+		
+		cmds.select( obj )
+		cmds.currentTime( ( cmds.currentTime( query=True ) ) )
+	
+	else:
+		print("Error: Second mesh does not match.")
+
 def makeUI():
 
 	# UI settings
@@ -78,11 +113,12 @@ def makeUI():
 	cmds.text( label='', height=win_padding )
 	
 	# Buttons
-	cmds.button( label='Select Mesh', command=selectMesh, annotation="Adds a custom KeyframeMesh attribute to the selected mesh." )
-	cmds.button( label='Add Attribute', command=initializeMesh, annotation="Adds a custom KeyframeMesh attribute to the selected mesh." )
-	cmds.button( label='Store Initial Pose', command=storeIniVertPos, annotation="Stores the initial vertex positions of the mesh as a base to compare all modifications." )
-	cmds.button( label='Add Keyframe', command=keyMesh, bgc=[0.5, 0.03, 0.03], annotation="Stores the initial vertex positions of the mesh as a base to compare all modifications." )
-	cmds.button( label='Edit Keyframes', command=selectObjAndVerts, annotation="Stores the initial vertex positions of the mesh as a base to compare all modifications." )
+	cmds.button( label='Select Mesh', command=selectMesh, annotation="Defines the mesh to apply keyframes." )
+	cmds.button( label='Add Attribute', command=initializeMesh, annotation="Adds a custom KeyframeMesh attribute to the selected mesh transform." )
+	cmds.button( label='Store Initial Pose', command=storeIniVertPos, annotation="Stores the initial vertex positions of the mesh. This is necessary for edits made when in sculpt mode." )
+	cmds.button( label='Add Keyframe', command=keyMesh, bgc=[0.5, 0.03, 0.03], annotation="Adds a keyframe to all vertices of the selected mesh at the current time." )
+	cmds.button( label='Add Keyframe From Second Mesh', bgc=[0.4, 0.2, 0.2], command=addKeyframeFromMesh, annotation="Adds a keyframe to all vertices of the selected mesh at the current time based on the vertex positions of a second selected mesh." )
+	cmds.button( label='Edit Keyframes', command=selectObjAndVerts, annotation="Selects all keyframed components for easy editing on the timeline." )
 	
 	# Close Button
 	cmds.separator( height=( win_padding * 4 ), style='in' )
